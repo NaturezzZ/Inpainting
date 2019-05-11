@@ -7,9 +7,9 @@ from keras.engine.topology import Layer
 '''调用形式：MyLayer(初始化列表)(inputs = [img, mask])'''
 class MyLayer(Layer):
 	
-	def __init__(self, axis, **kwargs):
+	def __init__(self, output_dim, **kwargs):
 		self.supports_masking = True
-		self.axis = axis
+		self.output_dim = output_dim
 		super(MyLayer, self).__init__(**kwargs)
 		
 	def compute_mask(self, input, input_mask=None):
