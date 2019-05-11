@@ -1,4 +1,4 @@
-# 喜讯！！现在的MyLayers似乎可以用了，调用方式同layers.Conv2D,快试一下行不行吧！！！！！(初始化只能写成 “name” = val列表的形式)
+# 喜讯！！现在的MyLayers似乎可以用了，调用方式同layers.Conv2D,快试一下行不行吧！！！！！(初始化只能写成 “name” = val列表的形式)  上面有layers.Conv2D的示例，拜托写个程序试一下MyLayers对不对
 # Inpainting
 ## Project for Introduction of AI
 ## We can make it!
