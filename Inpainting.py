@@ -2,27 +2,29 @@ import os
 import numpy
 import tensorflow as tf
 from keras import backend as K
+from keras.layers import Conv2D
 from keras.engine.topology import Layer
 
 '''调用形式：MyLayer(初始化列表)(inputs = [img, mask])'''
-class MyLayer(Layer):
+class MyLayer(Conv2D):
 	
-	def __init__(self, output_dim, **kwargs):
-		self.supports_masking = True
-		self.output_dim = output_dim
+	def __init__(self, **kwargs):
 		super(MyLayer, self).__init__(**kwargs)
 		
-	def compute_mask(self, input, input_mask=None):
-		return None
-		
 	def build(self, input_shape):
+		shape = []
+		shape.append(self.kernal_size[0])
+		shape.append(self.kernal_size[1])
+		shape.append(input_shape[3])
+		shape.append(self.filters)
 		self.kernel = self.add_weight(name="kernel",
-										shape=(input_shape[1], self.output_dim),
+										shape = shape,
 										initializer='uniform',
 										trainable=True)
 		super(MyLayer, self).build(input_shape)
 	
-	def call(self, inputs, mask = None):
+	__afterlength = 0
+	def call(self, inputs):
 		normalization = K.mean(inputs[1], axis[1, 2], keepdims = True)
 		normalization = K.repeat_elements(normalization, inputs[1].shape[1], axis=1)
 		normalization = K.repeat_elements(normalization, inputs[1].shape[2], axis=2)
@@ -34,7 +36,7 @@ class MyLayer(Layer):
 			data_format=self.data_format,
 			dilation_rate=self.dilation_rate
 		)
-		
+		self.__afterlength = img_output.shape[0]
 		img_output = K.conv2d(
 			inputs[1], K.ones(self.kernal.shape),
 			strides=self.strides,
@@ -57,7 +59,12 @@ class MyLayer(Layer):
 		return [img_output, mask_output]
 		
 	def compute_output_shape(self, input_shape):
-		return (input_shape[0], self.output_dim)
+		shape = []
+		shape.append(2)
+		shape.apeend(self.__afterlength)
+		shape.append(self.__afterlength)
+		shape.append(self.filters)
+		return (shape)
 
 '''调用形式: LossLayers(初始化列表)(12个layers的list)'''
 class LossLayer(Layer):
