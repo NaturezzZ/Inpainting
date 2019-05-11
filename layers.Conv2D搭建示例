@@ -1,0 +1,17 @@
+inputs = tf.keras.Input(shape = (28, 28, 1))
+x = layers.Conv2D(filters = 32,
+					kernel_size = [5, 5],
+					padding = "same",
+					activation = "relu")(inputs)
+x = layers.Conv2D(filters = 64,
+					kernel_size = [5, 5],
+					padding = "same",
+					activation = "relu")(x)
+x = layers.Flatten()(x)
+x = layers.Dense(512, activation = "relu")(x)
+predictions = layers.Dense(10, activation = "softmax")(x)
+model = tf.keras.Model(inputs=inputs, outputs=predictions)
+
+model.compile(optimizer=tf.keras.optimizers.SGD(0.001),
+				loss="categorical_crossentropy",
+				metrics=['accuracy'])
