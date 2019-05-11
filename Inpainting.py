@@ -5,7 +5,7 @@ from keras import backend as K
 from keras.layers import Conv2D
 from keras.engine.topology import Layer
 
-'''调用形式：MyLayer(初始化列表)(inputs = [img, mask])'''
+'''调用形式：MyLayer(初始化列表)([img, mask])'''
 class MyLayer(Conv2D):
 	
 	def __init__(self, **kwargs):
