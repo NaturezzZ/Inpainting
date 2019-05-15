@@ -1,5 +1,5 @@
 # 喜讯(from NaturezzZ) 经过我好几天的不懈努力，终于将cuda和tensorflow-gpu安装成功了！！！
-# 喜讯！！网络基本已经搭建好了，详见newstructure.py。还差一点点，主要是vgg16还没搞上去，所以也还没有运行。可能还有问题，等数据出来再说。
+# 喜讯！！网络基本已经搭建好了，基本和论文一致，已经实现pconv，详见newstructure.py。还差一点点，主要是vgg16还没搞上去，所以也还没有运行。可能还有问题，等数据出来再说。
 # Inpainting
 ## Project for Introduction of AI
 ## We can make it!
