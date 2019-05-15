@@ -1,5 +1,5 @@
 # 喜讯(from NaturezzZ) 经过我好几天的不懈努力，终于将cuda和tensorflow-gpu安装成功了！！！
-# 喜讯！！现在的MyLayers似乎可以用了，调用方式同layers.Conv2D,快试一下行不行吧！！！！！(初始化只能写成 “name” = val列表的形式)  上面有layers.Conv2D的示例，拜托写个程序试一下MyLayers对不对
+# 喜讯！！网络基本已经搭建好了，详见newstructure.py。还差一点点，主要是vgg16还没搞上去，所以也还没有运行。可能还有问题，等数据出来再说。
 # Inpainting
 ## Project for Introduction of AI
 ## We can make it!
