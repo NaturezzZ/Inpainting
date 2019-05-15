@@ -98,12 +98,12 @@ class LossLayer(Layer):
 	#inputs为list, 应该传入predic, gt, mask, (pool0, pool1, pool2)*(predic, gt) 共9个参数 传了pool0,再传pool1
 	def call(self, inputs):
 		loss = 0.0;
-		loss += 6.0 * loss_hole(inputs[2], inputs[1], inputs[0])
-		loss += loss_valid(inputs[2], inputs[1], inputs[0])
+		loss += 6.0 * self.loss_hole(inputs[2], inputs[1], inputs[0])
+		loss += self.loss_valid(inputs[2], inputs[1], inputs[0])
 		for i in range(3, 9, 2):
-			loss += 0.1 * loss_perceptual(inputs[i], inputs[i + 1])
-			loss += 120.0 * loss_style(inputs[i], inputs[i + 1])
-		loss += 0.1 * loss_variation(inputs[2], inputs[0])
+			loss += 0.1 * self.loss_perceptual(inputs[i], inputs[i + 1])
+			loss += 120.0 * self.loss_style(inputs[i], inputs[i + 1])
+		loss += 0.1 * self.loss_variation(inputs[2], inputs[0])
 		self.add_loss(loss, inputs = inputs)
 		return inputs[0]
 		
