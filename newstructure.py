@@ -95,7 +95,7 @@ class LossLayer(Layer):
 		a1 = self.l1(ret[:,:,1:,:], ret[:,:,:-1,:])
 		return a0 + a1
 		
-	#inputs为list, 应该传入predic, gt, mask, (pool1, pool2, pool3)*(predic, gt) 共9个参数 传了pool1,再传pool2
+	#inputs为list, 应该传入predic, gt, mask, (pool0, pool1, pool2)*(predic, gt) 共9个参数 传了pool0,再传pool1
 	def call(self, inputs):
 		loss = 0.0;
 		loss += 6.0 * loss_hole(inputs[2], inputs[1], inputs[0])
@@ -309,11 +309,11 @@ pool0_gt, pool1_gt, pool2_gt = ???
 vgg16(prediction)
 pool0_pre, pool1_pre, pool2_pre = ???
 '''
-predictions = LossLayer()([prediction, gt, mask, pool0_pre, pool1_pre, pool2_pre, pool0_gt, pool1_gt, pool2_gt])
+predictions = LossLayer()([prediction, gt, mask, pool0_pre, pool0_gt, pool1_pre, pool1_gt, pool2_pre, pool2_gt])
 
 model = keras.Model(inputs=inputs, outputs=prediction)
 
-'''初训练，找到最好的一次，记录网络权重（if判断找最小值待完善）'''
+'''预训练，找到最好的一次，记录网络权重（if判断找最小值待完善）'''
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.0002), loss=None)
 model.fit(img, epochs=15, batch_size = 15, shuffle=False, validation_split = 0.1)
 model.save_weights("Inpainting0.pkl")
