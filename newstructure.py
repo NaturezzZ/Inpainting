@@ -7,7 +7,6 @@ from keras.layers import LeakyReLU
 from keras.layers import Conv2D
 from keras.layers import UpSampling2D
 from keras.layers import BatchNormalization
-from keras
 from keras.engine.topology import Layer
 
 class split0(Layer):
