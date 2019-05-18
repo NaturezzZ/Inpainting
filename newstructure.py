@@ -8,6 +8,10 @@ from keras.layers import Conv2D
 from keras.layers import UpSampling2D
 from keras.layers import BatchNormalization
 from keras.engine.topology import Layer
+from keras.applications.vgg19 import VGG19
+from keras.preprocessing import image
+from keras.applications.vgg19 import preprocess_input
+from keras.models import Model
 
 class split0(Layer):
 	def call(self, inputs):
@@ -309,6 +313,31 @@ pool0_gt, pool1_gt, pool2_gt = ???
 vgg16(prediction)
 pool0_pre, pool1_pre, pool2_pre = ???
 '''
+
+'''use vgg16'''
+base_model = VGG19(weights='imagenet')
+_gt = gt
+_gt = np.expand_dims(_gt, axis  = 0)
+_gt = preprocess_input(_gt)
+
+_prediction = prediction
+_prediction = np.expand_dims(_prediction, axis  = 0)
+_prediction = preprocess_input(_prediction)
+
+vgg_model0 = Model(inputs=base_model.input, outputs=base_model.get_layer('block1_pool').output, trainable = False)
+vgg_model1 = Model(inputs=base_model.input, outputs=base_model.get_layer('block2_pool').output, trainable = False)
+vgg_model2 = Model(inputs=base_model.input, outputs=base_model.get_layer('block3_pool').output, trainable = False)
+
+pool0_gt = vgg_model0.predict(_gt)
+pool0_pre = vgg_model0.predict(_prediction)
+
+pool1_gt = vgg_model1.predic(_gt)
+pool1_pre = vgg_model1.predict(_prediction)
+
+pool2_gt = vgg.model2.predict(_gt)
+pool2_pre = vgg.model2.predict(_prediction)
+
+
 predictions = LossLayer()([prediction, gt, mask, pool0_pre, pool0_gt, pool1_pre, pool1_gt, pool2_pre, pool2_gt])
 
 model = keras.Model(inputs=inputs, outputs=prediction)
