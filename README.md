@@ -1,4 +1,7 @@
+# 最近动态（20180519）已经将vgg19加入了网络（由于vgg16调用比较麻烦），并且设定了untrainable，接下来一步是处理输入并且对于网络进行调试（注：Ubuntu下的CUDA和Cudnn我也已经装好了）
+
 # 喜讯(from NaturezzZ) 经过我好几天的不懈努力，终于将cuda和tensorflow-gpu安装成功了！！！
+
 # 喜讯！！网络基本已经搭建好了，基本和论文一致，已经实现pconv，详见newstructure.py。还差一点点，主要是vgg16还没搞上去，所以也还没有运行。可能还有问题，等数据出来再说。
 # Inpainting
 ## Project for Introduction of AI
