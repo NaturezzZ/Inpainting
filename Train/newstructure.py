@@ -314,8 +314,12 @@ vgg16(prediction)
 pool0_pre, pool1_pre, pool2_pre = ???
 '''
 
-'''use vgg16'''
+'''use vgg19'''
 base_model = VGG19(weights='imagenet')
+
+'''To freeze the layers'''
+for layer in base_model.layers[:]:
+	layer.trainable = False
 _gt = gt
 _gt = np.expand_dims(_gt, axis  = 0)
 _gt = preprocess_input(_gt)
@@ -324,9 +328,9 @@ _prediction = prediction
 _prediction = np.expand_dims(_prediction, axis  = 0)
 _prediction = preprocess_input(_prediction)
 
-vgg_model0 = Model(inputs=base_model.input, outputs=base_model.get_layer('block1_pool').output, trainable = False)
-vgg_model1 = Model(inputs=base_model.input, outputs=base_model.get_layer('block2_pool').output, trainable = False)
-vgg_model2 = Model(inputs=base_model.input, outputs=base_model.get_layer('block3_pool').output, trainable = False)
+vgg_model0 = Model(inputs=base_model.input, outputs=base_model.get_layer('block1_pool').output)
+vgg_model1 = Model(inputs=base_model.input, outputs=base_model.get_layer('block2_pool').output)
+vgg_model2 = Model(inputs=base_model.input, outputs=base_model.get_layer('block3_pool').output)
 
 pool0_gt = vgg_model0.predict(_gt)
 pool0_pre = vgg_model0.predict(_prediction)
