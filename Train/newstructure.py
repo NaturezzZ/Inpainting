@@ -2,7 +2,6 @@ import os
 import numpy
 import tensorflow as tf
 import keras
-#import tryvgg16.py as tvgg16
 from keras import backend as K
 from keras.layers import ReLU
 from keras.layers import LeakyReLU
