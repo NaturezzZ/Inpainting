@@ -67,7 +67,13 @@ class generate_mask(Layer):
 		return mask_output
 	def compute_output_shape(self, input_shape):
 		return tuple([input_shape[0], input_shape[1] // 2, input_shape[2] // 2, self.output_dim])
-
+	
+class concat_layer(Layer):
+	def call(self, inputs):
+		return K.concat([inputs[0], inputs[1]], axis = 3)
+	def compute_output_shape(self, input_shape):
+		return input_shape[0]
+	
 '''调用形式: LossLayers(初始化列表)(9个layers的list)'''
 class LossLayer(Layer):
 	def __init__(self, **kwargs):
@@ -222,7 +228,7 @@ upsample
 
 '''conv8   x7_up and merge with x6_val 4*4*512 to 8*8*512 to 8*8*(512+512) to 8*8*512'''
 x7_up = UpSampling2D(size = [2, 2], interpolation="nearest")(x7_val)
-x8 = tf.concat([x7_up, x6_val], axis = 3)
+x8 = concat_layer()([x7_up, x6_val])
 x8 = Conv2D(filters = 512,
 			kernel_size = [3, 3],
 			strides = [1, 1],
@@ -233,7 +239,7 @@ x8 = LeakyReLU(alpha = 0.2)(x8)
 			
 '''conv9   x8_up and merge with x5_val 8*8*512 to 16*16*512 to 16*16*(512+512) to 16*16*512'''
 x8_up = UpSampling2D(size = [2, 2], interpolation="nearest")(x8)
-x9 = tf.concat([x8_up, x5_val], axis = 3)
+x9 = concat_layer()([x8_up, x5_val])
 x9 = Conv2D(filters = 512,
 			kernel_size = [3, 3],
 			strides = [1, 1],
@@ -244,7 +250,7 @@ x9 = LeakyReLU(alpha = 0.2)(x9)
 			
 '''conv10   x9_up and merge with x4_val 16*16*512 to 32*32*512 to 32*32*(512+512) to 32*32*512'''
 x9_up = UpSampling2D(size = [2, 2], interpolation="nearest")(x9)
-x10 = tf.concat([x9_up, x4_val], axis = 3)
+x10 = concat_layer()([x9_up, x4_val])
 x10 = Conv2D(filters = 512,
 			kernel_size = [3, 3],
 			strides = [1, 1],
@@ -255,7 +261,7 @@ x10 = LeakyReLU(alpha = 0.2)(x10)
 			
 '''conv11   x10_up and merge with x3_val 32*32*512 to 64*64*512 to 64*64*(512+256) to 64*64*256'''
 x10_up = UpSampling2D(size = [2, 2], interpolation="nearest")(x10)
-x11 = tf.concat([x10_up, x3_val], axis = 3)
+x11 = concat_layer()([x10_up, x3_val])
 x11 = Conv2D(filters = 256,
 			kernel_size = [3, 3],
 			strides = [1, 1],
@@ -266,7 +272,7 @@ x11 = LeakyReLU(alpha = 0.2)(x11)
 
 '''conv12   x11_up and merge with x2_val 64*64*256 to 128*128*256 to 128*128*(256+128) to 128*128*128'''
 x11_up = UpSampling2D(size = [2, 2], interpolation="nearest")(x11)
-x12 = tf.concat([x11_up, x2_val], axis = 3)
+x12 = concat_layer()([x11_up, x2_val])
 x12 = Conv2D(filters = 128,
 			kernel_size = [3, 3],
 			strides = [1, 1],
@@ -277,7 +283,7 @@ x12 = LeakyReLU(alpha = 0.2)(x12)
 			
 '''conv13   x12_up and merge with x1_val 128*128*128 to 256*256*128 to 256*256*(128+64) to 256*256*64'''
 x12_up = UpSampling2D(size = [2, 2], interpolation="nearest")(x12)
-x13 = tf.concat([x12_up, x1_val], axis = 3)
+x13 = concat_layer()([x12_up, x1_val])
 x13 = Conv2D(filters = 64,
 			kernel_size = [3, 3],
 			strides = [1, 1],
@@ -288,7 +294,7 @@ x13 = LeakyReLU(alpha = 0.2)(x13)
 			
 '''conv14   x13_up and merge with x0_val 256*256*64 to 512*512*64 to 512*512*(64+3) to 512*512*3'''
 x13_up = UpSampling2D(size = [2, 2], interpolation="nearest")(x13)
-x14 = tf.concat([x13_up, x0_val], axis = 3)
+x14 = concat_layer()([x13_up, x0_val])
 prediction = Conv2D(filters = 3,
 			kernel_size = [3, 3],
 			strides = [1, 1],
