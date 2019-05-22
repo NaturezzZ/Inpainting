@@ -69,10 +69,9 @@ class generate_mask(Layer):
 	
 class concat_layer(Layer):
 	def call(self, inputs):
-		return K.concat([inputs[0], inputs[1]], axis = 3)
+		return K.concatenate([inputs[0], inputs[1]], axis = 3)
 	def compute_output_shape(self, input_shape):
-		return input_shape[0]
-	
+		return tuple([input_shape[0][0], input_shape[0][1], input_shape[0][2], input_shape[0][3] + input_shape[1][3]])	
 '''调用形式: LossLayers(初始化列表)(9个layers的list)'''
 class LossLayer(Layer):
 	def __init__(self, **kwargs):
@@ -122,7 +121,7 @@ class LossLayer(Layer):
 		return inputs[0]
 	def l1(self, A, B):
 		tmp = K.abs(A - B)
-		tmp /= tf.cast((tmp.shape[3] * tmp.shape[1] * tmp.shape[2]), tf.float32)
+		tmp /= K.cast((tmp.shape[3] * tmp.shape[1] * tmp.shape[2]), "float32")
 		return tf.reduce_sum(tmp)
 		
 '''伪UNet 比pconv原论文少了两层(encode 和 decode各少一层) ，
@@ -338,7 +337,7 @@ pool2_pre = vgg_model2(_prediction)
 '''
 '''
 '''
-pp = tf.concat([gt, prediction], axis = 0)
+pp = K.concat([gt, prediction], axis = 0)
 vgg = tvgg16.Vgg16()
 vgg.build(pp)
 vgg.pool1
