@@ -1,5 +1,5 @@
 import os
-import numpy
+import numpy as np
 import tensorflow as tf
 import keras
 from keras import backend as K
@@ -45,7 +45,7 @@ class change_value(Layer):
 		normalization = K.mean(inputs, axis = [1, 2], keepdims = True) #均值
 		normalization = K.repeat_elements(normalization, inputs.shape[1], axis=1)
 		normalization = K.repeat_elements(normalization, inputs.shape[2], axis=2)
-		return inputs
+		return normalization
 		
 	def compute_output_shape(self, input_shape):
 		return input_shape
@@ -86,7 +86,6 @@ class LossLayer(Layer):
 	#predic, gt 在vgg16跑下来pool1、pool2、pool3的
 	def loss_perceptual(self, vgg_predic, vgg_gt):
 		return self.l1(vgg_predic, vgg_gt)
-	
 	#loss_styleout(predict)
 	def loss_style(self, vgg_predic, vgg_gt):
 		vgg_predic_t = vgg_predic
@@ -110,16 +109,24 @@ class LossLayer(Layer):
 		tmp = K.abs(A - B)
 		return K.mean(tmp)
 
-	#inputs为list, 应该传入predic, gt, mask, (pool0, pool1, pool2)*(predic, gt) 共9个参数 传了pool0,再传pool1
+	#inputs为list, 应该传入predic, gt, mask, (pool0, pool1, pool2)*(predic, gt, comp) 共9个参数 传了pool0,再传pool1
 	def call(self, inputs):
 		loss = 0.0
 		loss += 6.0 * self.loss_hole(inputs[2], inputs[1], inputs[0])
 		loss += self.loss_valid(inputs[2], inputs[1], inputs[0])
-		for i in range(3, 9, 2):
-			loss += 0.1 * self.loss_perceptual(inputs[i], inputs[i + 1])
-			loss += 120.0 * self.loss_style(inputs[i], inputs[i + 1])
-		loss += 0.1 * self.loss_variation(inputs[2], inputs[0])
+		for i in range(3, 11, 3):
+			loss += 0.05 * self.loss_perceptual(inputs[i], inputs[i + 1])
+			loss += (1 / K.cast((inputs[i].shape[3] * inputs[i].shape[3]), "float32")) * 180.0 * self.loss_style(inputs[i], inputs[i + 1])
+			loss += 0.05 * self.loss_perceptual(inputs[i + 2], inputs[i + 1])
+		loss += 0.1 * self.loss_variation(inputs[2], inputs[0] * (1 - inputs[2]) + inputs[1] * inputs[2])
+		loss = K.cast(loss, "float64")
 		self.add_loss(loss, inputs = inputs)
+		
+		'''
+		debug
+		loss = self.loss_valid(inputs[0], inputs[0], inputs[0])
+		self.add_loss(loss, inputs = inputs)
+		'''
 		return inputs[0]
 		
 '''伪UNet 比pconv原论文少了两层(encode 和 decode各少一层) ，
@@ -311,16 +318,8 @@ prediction = Conv2D(filters = 3,
 			strides = [1, 1],
 			padding = "same",
 			activation = LeakyReLU(alpha = 0.2))(x14)
-'''
-待补充部分：
-vgg16(gt)
-pool0_gt, pool1_gt, pool2_gt = ???
-vgg16(prediction)
-pool0_pre, pool1_pre, pool2_pre = ???
-'''
 
 '''use vgg19'''
-
 base_model = VGG19(include_top = False, weights='imagenet')
 
 '''To freeze the layers'''
@@ -335,42 +334,51 @@ _gt = Lambda(lambda x: preprocess_input(x))(gt)
 _prediction = Lambda(lambda x: preprocess_input(x))(prediction)
 #_prediction = preprocess_input(prediction)
 
+comp = Lambda(lambda x: x[0] * (1 - x[2]) + x[1] * x[2])([prediction, gt, mask0])
+_comp = Lambda(lambda x: preprocess_input(x))(comp)
+
 vgg_model0 = Model(inputs=base_model.input, outputs=base_model.get_layer('block1_pool').output)
 vgg_model1 = Model(inputs=base_model.input, outputs=base_model.get_layer('block2_pool').output)
 vgg_model2 = Model(inputs=base_model.input, outputs=base_model.get_layer('block3_pool').output)
 
 pool0_gt = vgg_model0(_gt)
 pool0_pre = vgg_model0(_prediction)
-print(pool0_pre)
+pool0_comp = vgg_model0(_comp)
 
 pool1_gt = vgg_model1(_gt)
 pool1_pre = vgg_model1(_prediction)
-print(pool1_pre)
+pool1_comp = vgg_model1(_comp)
 
 pool2_gt = vgg_model2(_gt)
 pool2_pre = vgg_model2(_prediction)
-print(pool2_pre)
-
-'''
-pp = K.concat([gt, prediction], axis = 0)
-vgg = tvgg16.Vgg16()
-vgg.build(pp)
-vgg.pool1, pool0_pre, pool0_gt, pool1_pre, pool1_gt, pool2_pre, pool2_gt
-'''
-print(prediction)
-predictions = LossLayer()([prediction, gt, mask0, pool0_pre, pool0_gt, pool1_pre, pool1_gt, pool2_pre, pool2_gt])
-
+pool2_comp = vgg_model2(_comp)
+predictions = LossLayer()([prediction, gt, mask0, pool0_pre, pool0_gt, pool0_comp, pool1_pre, pool1_gt, pool1_comp, pool2_pre, pool2_gt, pool2_comp])
 model = keras.Model(inputs=inputs, outputs=predictions)
-
 '''读入数据,gt split0, mask0 split1, x0_mask split2'''
 
+from picmaker import load_pic
 from picmaker import makepic
-img = makepic()
-
-'''预训练，找到最好的一次，记录网络权重（if判断找最小值待完善）'''
+from picmaker import cl_file
+from picmaker import check_pic
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.0002), loss=None)
-model.fit(img, epochs=1, batch_size = 10, shuffle=False, validation_split = 0.1)			
-model.save_weights("Inpainting0.pkl")
+#model.load_weights("Inpainting0.pkl")
+load_pic()
+T =  16
+ep = 30
+for i in range(T):
+	img = makepic()
+	print("****************%d remained*******************" % (T - i))
+	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0.1)
+	model.save_weights("Inpainting%d.pkl" % i)
+cl_file()
+'''
+import cv2
+test_img = check_pic()
+pre = model.predict(test_img)
+'''
+'''
+
+'''
 
 """
 '''再次训练'''
