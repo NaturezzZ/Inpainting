@@ -3,6 +3,7 @@ import numpy
 import tensorflow as tf
 import keras
 from keras import backend as K
+from keras.layers.core import Lambda
 from keras.layers import ReLU
 from keras.layers import LeakyReLU
 from keras.layers import Conv2D
@@ -41,14 +42,13 @@ class Mask(Layer):
 		
 class change_value(Layer):
 	def call(self, inputs):
-		normalization = K.mean(inputs[1], axis = [1, 2], keepdims = True) #均值
-		normalization = K.repeat_elements(normalization, inputs[1].shape[1], axis=1)
-		normalization = K.repeat_elements(normalization, inputs[1].shape[2], axis=2)
-		inputs[0] = inputs[0] / normalization
-		return inputs[0]
+		normalization = K.mean(inputs, axis = [1, 2], keepdims = True) #均值
+		normalization = K.repeat_elements(normalization, inputs.shape[1], axis=1)
+		normalization = K.repeat_elements(normalization, inputs.shape[2], axis=2)
+		return inputs
 		
 	def compute_output_shape(self, input_shape):
-		return input_shape[0]
+		return input_shape
 		
 class generate_mask(Layer):
 	def __init__(self, output_dim, knsize, **kwargs):
@@ -83,7 +83,6 @@ class LossLayer(Layer):
 		
 	def loss_valid(self, mask, gt, predic):
 		return self.l1(mask * gt, mask * predic)
-		
 	#predic, gt 在vgg16跑下来pool1、pool2、pool3的
 	def loss_perceptual(self, vgg_predic, vgg_gt):
 		return self.l1(vgg_predic, vgg_gt)
@@ -107,10 +106,13 @@ class LossLayer(Layer):
 		a0 = self.l1(ret[:,1:,:,:], ret[:,:-1,:,:])
 		a1 = self.l1(ret[:,:,1:,:], ret[:,:,:-1,:])
 		return a0 + a1
-		
+	def l1(self, A, B):
+		tmp = K.abs(A - B)
+		return K.mean(tmp)
+
 	#inputs为list, 应该传入predic, gt, mask, (pool0, pool1, pool2)*(predic, gt) 共9个参数 传了pool0,再传pool1
 	def call(self, inputs):
-		loss = 0.0;
+		loss = 0.0
 		loss += 6.0 * self.loss_hole(inputs[2], inputs[1], inputs[0])
 		loss += self.loss_valid(inputs[2], inputs[1], inputs[0])
 		for i in range(3, 9, 2):
@@ -119,10 +121,6 @@ class LossLayer(Layer):
 		loss += 0.1 * self.loss_variation(inputs[2], inputs[0])
 		self.add_loss(loss, inputs = inputs)
 		return inputs[0]
-	def l1(self, A, B):
-		tmp = K.abs(A - B)
-		tmp /= K.cast((tmp.shape[3] * tmp.shape[1] * tmp.shape[2]), "float32")
-		return tf.reduce_sum(tmp)
 		
 '''伪UNet 比pconv原论文少了两层(encode 和 decode各少一层) ，
 使用BN，Adam， loss函数有一点不同，实现起来更方便（希望结果不要太差，T^T）'''
@@ -133,7 +131,8 @@ inputs = keras.Input(shape = [256, 256, 9])
 gt = split0()(inputs)
 mask0 = split1()(inputs)
 x0_ma = split2()(inputs)
-x0_val = change_value()([x0_ma, mask0])
+tmp = change_value()(mask0)
+x0_val = Lambda(lambda x: x[0] / x[1])([x0_ma, tmp])
 
 
 '''conv1 512*512*3 to 256*256*64'''
@@ -144,7 +143,9 @@ x1 = Conv2D(filters = 64,
 			activation = "relu")(x0_val)
 mask1 = generate_mask(64, 7)(mask0)
 x1_ma = Mask()([x1, mask1])
-x1_val = change_value()([x1_ma, mask1])
+tmp = change_value()(mask1)
+x1_val = Lambda(lambda x: x[0] / x[1])([x1_ma, tmp])
+#x1_val = change_value()([x1_ma, mask1])
 
 '''conv2 256*256*64 to 128*128*128'''	
 x2 = Conv2D(filters = 128,
@@ -156,7 +157,9 @@ x2 = BatchNormalization(axis = 3, name = "Batch2")(x2)
 x2 = ReLU()(x2)
 mask2 = generate_mask(128, 5)(mask1)
 x2_ma = Mask()([x2, mask2])
-x2_val = change_value()([x2_ma, mask2])
+tmp = change_value()(mask2)
+x2_val = Lambda(lambda x: x[0] / x[1])([x2_ma, tmp])
+#x2_val = change_value()([x2_ma, mask2])
 
 '''conv3 128*128*128 to 64*64*256'''
 x3 = Conv2D(filters = 256,
@@ -168,7 +171,9 @@ x3 = BatchNormalization(axis = 3, name = "Batch3")(x3)
 x3 = ReLU()(x3)
 mask3 = generate_mask(256, 5)(mask2)
 x3_ma = Mask()([x3, mask3])
-x3_val = change_value()([x3_ma, mask3])
+tmp = change_value()(mask3)
+x3_val = Lambda(lambda x: x[0] / x[1])([x3_ma, tmp])
+#x3_val = change_value()([x3_ma, mask3])
 
 '''conv4 64*64*256 to 32*32*512'''
 x4 = Conv2D(filters = 512,
@@ -180,7 +185,9 @@ x4 = BatchNormalization(axis = 3, name = "Batch4")(x4)
 x4 = ReLU()(x4)
 mask4 = generate_mask(512, 3)(mask3)
 x4_ma = Mask()([x4, mask4])
-x4_val = change_value()([x4_ma, mask4])
+tmp = change_value()(mask4)
+x4_val = Lambda(lambda x: x[0] / x[1])([x4_ma, tmp])
+#x4_val = change_value()([x4_ma, mask4])
 
 '''conv5 32*32*512 to 16*16*512'''
 x5 = Conv2D(filters = 512,
@@ -192,7 +199,9 @@ x5 = BatchNormalization(axis = 3, name = "Batch5")(x5)
 x5 = ReLU()(x5)
 mask5 = generate_mask(512, 3)(mask4)
 x5_ma = Mask()([x5, mask5])
-x5_val = change_value()([x5_ma, mask5])
+tmp = change_value()(mask5)
+x5_val = Lambda(lambda x: x[0] / x[1])([x5_ma, tmp])
+#x5_val = change_value()([x5_ma, mask5])
 
 '''conv6 16*16*512 to 8*8*512'''
 x6 = Conv2D(filters = 512,
@@ -204,7 +213,9 @@ x6 = BatchNormalization(axis = 3, name = "Batch6")(x6)
 x6 = ReLU()(x6)
 mask6 = generate_mask(512, 3)(mask5)
 x6_ma = Mask()([x6, mask6])
-x6_val = change_value()([x6_ma, mask6])
+tmp = change_value()(mask6)
+x6_val = Lambda(lambda x: x[0] / x[1])([x6_ma, tmp])
+#x6_val = change_value()([x6_ma, mask6])
 
 '''conv7 8*8*512 to 4*4*512'''
 x7 = Conv2D(filters = 512,
@@ -216,7 +227,9 @@ x7 = BatchNormalization(axis = 3, name = "Batch7")(x7)
 x7 = ReLU()(x7)
 mask7 = generate_mask(512, 3)(mask6)
 x7_ma = Mask()([x7, mask7])
-x7_val = change_value()([x7_ma, mask7])
+tmp = change_value()(mask7)
+x7_val = Lambda(lambda x: x[0] / x[1])([x7_ma, tmp])
+#x7_val = change_value()([x7_ma, mask7])
 
 '''
 downsample
@@ -315,12 +328,12 @@ base_model = VGG19(include_top = False, weights='imagenet')
 for layer in base_model.layers[:]:
 	layer.trainable = False
 
-_gt = gt
+_gt = Lambda(lambda x: preprocess_input(x))(gt)
 
-_gt = preprocess_input(_gt)
+#_gt = preprocess_input(gt)
 
-_prediction = prediction
-_prediction = preprocess_input(_prediction)
+_prediction = Lambda(lambda x: preprocess_input(x))(prediction)
+#_prediction = preprocess_input(prediction)
 
 vgg_model0 = Model(inputs=base_model.input, outputs=base_model.get_layer('block1_pool').output)
 vgg_model1 = Model(inputs=base_model.input, outputs=base_model.get_layer('block2_pool').output)
@@ -328,34 +341,38 @@ vgg_model2 = Model(inputs=base_model.input, outputs=base_model.get_layer('block3
 
 pool0_gt = vgg_model0(_gt)
 pool0_pre = vgg_model0(_prediction)
+print(pool0_pre)
 
 pool1_gt = vgg_model1(_gt)
 pool1_pre = vgg_model1(_prediction)
+print(pool1_pre)
 
 pool2_gt = vgg_model2(_gt)
 pool2_pre = vgg_model2(_prediction)
-'''
-'''
+print(pool2_pre)
+
 '''
 pp = K.concat([gt, prediction], axis = 0)
 vgg = tvgg16.Vgg16()
 vgg.build(pp)
-vgg.pool1
+vgg.pool1, pool0_pre, pool0_gt, pool1_pre, pool1_gt, pool2_pre, pool2_gt
 '''
+print(prediction)
 predictions = LossLayer()([prediction, gt, mask0, pool0_pre, pool0_gt, pool1_pre, pool1_gt, pool2_pre, pool2_gt])
 
 model = keras.Model(inputs=inputs, outputs=predictions)
 
 '''读入数据,gt split0, mask0 split1, x0_mask split2'''
+
 from picmaker import makepic
 img = makepic()
 
 '''预训练，找到最好的一次，记录网络权重（if判断找最小值待完善）'''
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.0002), loss=None)
-model.fit(img, epochs=15, batch_size = 15, shuffle=False, validation_split = 0.1)
+model.fit(img, epochs=1, batch_size = 10, shuffle=False, validation_split = 0.1)			
 model.save_weights("Inpainting0.pkl")
 
-
+"""
 '''再次训练'''
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.00006), loss=None)
 model.load_weights("Inpainting0.pkl")
@@ -370,6 +387,4 @@ for layer in model.layers:
 
 model.fit(img, epochs=30, batch_size = 6, shuffle=False, validation_split = 0.1)
 model.save_weights("Inpainting1.pkl")
-
-
-			
+"""
