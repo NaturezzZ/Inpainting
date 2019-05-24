@@ -25,7 +25,7 @@ def load_pic():
 def check_pic():
 	print("check stage")
 	pic_num = random.randint(0, 35000)
-	mask_num = random.randint(0, 11999)
+	mask_num = random.randint(0, 1500)
 	pic = pic_data[pic_num * 256: (pic_num + 1) * 256]
 	mask = mask_data[mask_num * 256: (mask_num + 1) * 256]
 	output = np.zeros((1, 256, 256, 9))
