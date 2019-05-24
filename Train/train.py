@@ -362,10 +362,10 @@ from picmaker import cl_file
 from picmaker import check_pic
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.0002), loss=None)
 load_pic()
-model.load_weights("Inpainting16.pkl")
+model.load_weights("Inpainting19.pkl")
 T =  30
 ep = 30
-for i in range(17, T):
+for i in range(20, T):
 	img = makepic()
 	print("****************%d remained*******************" % (T - i))
 	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0.1)
