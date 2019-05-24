@@ -97,13 +97,9 @@ class LossLayer(Layer):
 		return self.l1(tf.matmul(vgg_predic_t, vgg_predic), tf.matmul(vgg_gt_t, vgg_gt))
 	
 	#平滑度计算，先对遮挡区域适当扩大（因为需要关注和非遮挡区域的平滑度）
-	def loss_variation(self, mask, predic):
-		kernel = K.ones((3, 3, mask.shape[3], mask.shape[3]))
-		dilated_holes = K.conv2d(1 - mask, kernel, data_format = "channels_last", padding = "same")
-		dilated_holes = K.cast(K.greater(dilated_holes, 0), "float32")
-		ret = dilated_holes * predic
-		a0 = self.l1(ret[:,1:,:,:], ret[:,:-1,:,:])
-		a1 = self.l1(ret[:,:,1:,:], ret[:,:,:-1,:])
+	def loss_variation(self, predic):
+		a0 = self.l1(predic[:,1:,:,:], predic[:,:-1,:,:])
+		a1 = self.l1(predic[:,:,1:,:], predic[:,:,:-1,:])
 		return a0 + a1
 	def l1(self, A, B):
 		tmp = K.abs(A - B)
@@ -118,7 +114,7 @@ class LossLayer(Layer):
 			loss += 0.05 * self.loss_perceptual(inputs[i], inputs[i + 1])
 			loss += (1 / K.cast((inputs[i].shape[3] * inputs[i].shape[3]), "float32")) * 180.0 * self.loss_style(inputs[i], inputs[i + 1])
 			loss += 0.05 * self.loss_perceptual(inputs[i + 2], inputs[i + 1])
-		loss += 0.1 * self.loss_variation(inputs[2], inputs[0] * (1 - inputs[2]) + inputs[1] * inputs[2])
+		loss += 0.1 * self.loss_variation(inputs[0] * (1 - inputs[2]) + inputs[1] * inputs[2])
 		loss = K.cast(loss, "float64")
 		self.add_loss(loss, inputs = inputs)
 		
@@ -362,10 +358,10 @@ from picmaker import cl_file
 from picmaker import check_pic
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.0002), loss=None)
 load_pic()
-model.load_weights("Inpainting19.pkl")
-T =  30
-ep = 30
-for i in range(20, T):
+model.load_weights("Inpainting20.pkl")
+T =  25
+ep = 15
+for i in range(21, T):
 	img = makepic()
 	print("****************%d remained*******************" % (T - i))
 	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0.1)
@@ -382,8 +378,8 @@ pre = model.predict(test_img)
 
 """
 '''再次训练'''
-model.compile(optimizer=keras.optimizers.Adam(lr = 0.00006), loss=None)
-model.load_weights("Inpainting0.pkl")
+model.compile(optimizer=keras.optimizers.Adam(lr = 0.00005), loss=None)
+model.load_weights("Inpainting20.pkl")
 '''冻结encoder的BN权值'''
 nmlist = []
 for i in range(2, 8, 1):
@@ -392,7 +388,13 @@ for layer in model.layers:
 	layerName = str(layer.name)
 	if ((layerName is not None) and (layerName in nmlist)):
 		layer.trainable = False
-
-model.fit(img, epochs=30, batch_size = 6, shuffle=False, validation_split = 0.1)
-model.save_weights("Inpainting1.pkl")
+load_pic()
+T =  2
+ep = 30
+for i in range(20, T):
+	img = makepic()
+	print("****************%d remained*******************" % (T - i))
+	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0.1)
+	model.save_weights("lj_Inpainting%d.pkl" % i)
+cl_file()
 """
