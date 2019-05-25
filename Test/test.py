@@ -360,7 +360,7 @@ cv2.imwrite("comp.png", (1 - testimg[0,:,:,3:6]) * pre[0] + testimg[0,:,:,3:6] *
 '''
 import cv2
 inputimg = np.zeros((1, 256, 256, 9))
-tmp = cv2.imread("masked_picture.png")
+tmp = cv2.imread("masked_picture.jpg")
 inputimg[0,:,:,:3] = tmp
 
 img_in = cv2.imread("mask.png")
@@ -384,7 +384,7 @@ inputimg[0,:,:,6:9] = inputimg[0,:,:,:3] * inputimg[0,:,:,3:6]
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.0002), loss=None)
 present_path = os.getcwd()
 os.chdir("E:\\0NaturezzZ\\SchoolWork\\2019Spring\\AI_Intro\\CV_Smallclass\\Project\\Inpainting")
-model.load_weights("Inpainting24.pkl")
+model.load_weights("lj_Inpainting19.pkl")
 os.chdir(present_path)
 pre = model.predict(inputimg)
 outputimg = np.zeros((256, 256 * 3 + 12, 3))
