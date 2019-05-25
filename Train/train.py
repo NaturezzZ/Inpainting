@@ -356,17 +356,19 @@ from picmaker import load_pic
 from picmaker import makepic
 from picmaker import cl_file
 from picmaker import check_pic
+"""
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.0002), loss=None)
 load_pic()
-model.load_weights("Inpainting20.pkl")
+model.load_weights("Inpainting21.pkl")
 T =  25
 ep = 15
-for i in range(21, T):
+for i in range(22, T):
 	img = makepic()
 	print("****************%d remained*******************" % (T - i))
 	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0.1)
 	model.save_weights("Inpainting%d.pkl" % i)
 cl_file()
+"""
 '''
 import cv2
 test_img = check_pic()
@@ -376,11 +378,10 @@ pre = model.predict(test_img)
 
 '''
 
-"""
+
 '''再次训练'''
-model.compile(optimizer=keras.optimizers.Adam(lr = 0.00005), loss=None)
-model.load_weights("Inpainting20.pkl")
-'''冻结encoder的BN权值'''
+load_pic()
+
 nmlist = []
 for i in range(2, 8, 1):
 	nmlist.append("Batch%d" % i)
@@ -388,13 +389,16 @@ for layer in model.layers:
 	layerName = str(layer.name)
 	if ((layerName is not None) and (layerName in nmlist)):
 		layer.trainable = False
-load_pic()
-T =  2
+
+model.compile(optimizer=keras.optimizers.Adam(lr = 0.00005), loss=None)
+model.load_weights("Inpainting24.pkl")
+'''冻结encoder的BN权值'''
+
+T =  20
 ep = 30
-for i in range(20, T):
+for i in range(0, T):
 	img = makepic()
 	print("****************%d remained*******************" % (T - i))
 	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0.1)
 	model.save_weights("lj_Inpainting%d.pkl" % i)
 cl_file()
-"""
