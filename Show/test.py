@@ -360,7 +360,7 @@ cv2.imwrite("comp.png", (1 - testimg[0,:,:,3:6]) * pre[0] + testimg[0,:,:,3:6] *
 '''
 import cv2
 inputimg = np.zeros((1, 256, 256, 9))
-tmp = cv2.imread("original.jpg")
+tmp = cv2.imread("newpic.png")
 inputimg[0,:,:,:3] = tmp
 
 img_in = cv2.imread("mask.png")

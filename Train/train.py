@@ -112,8 +112,9 @@ class LossLayer(Layer):
 		loss += self.loss_valid(inputs[2], inputs[1], inputs[0])
 		for i in range(3, 11, 3):
 			loss += 0.05 * self.loss_perceptual(inputs[i], inputs[i + 1])
-			loss += (1 / K.cast((inputs[i].shape[3] * inputs[i].shape[3]), "float32")) * 180.0 * self.loss_style(inputs[i], inputs[i + 1])
 			loss += 0.05 * self.loss_perceptual(inputs[i + 2], inputs[i + 1])
+			loss += (1 / K.cast((inputs[i].shape[3] * inputs[i].shape[3]), "float32")) * 120.0 * self.loss_style(inputs[i], inputs[i + 1])
+			loss += (1 / K.cast((inputs[i].shape[3] * inputs[i].shape[3]), "float32")) * 120.0 * self.loss_style(inputs[i+2], inputs[i + 1])
 		loss += 0.1 * self.loss_variation(inputs[0] * (1 - inputs[2]) + inputs[1] * inputs[2])
 		loss = K.cast(loss, "float64")
 		self.add_loss(loss, inputs = inputs)
@@ -391,12 +392,12 @@ for layer in model.layers:
 		layer.trainable = False
 
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.00005), loss=None)
-model.load_weights("Inpainting24.pkl")
+model.load_weights("lj_Inpainting19.pkl")
 '''冻结encoder的BN权值'''
 
-T =  20
-ep = 30
-for i in range(0, T):
+T =  100
+ep = 26
+for i in range(20, T):
 	img = makepic()
 	print("****************%d remained*******************" % (T - i))
 	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0.1)

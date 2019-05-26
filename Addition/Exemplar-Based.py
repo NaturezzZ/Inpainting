@@ -35,7 +35,9 @@ def find_nearst(x, y, filter_size): #保证两块区域的形状一样,返回的
 			if(or_mask[i][j] - or_mask[i+lenx][j] - or_mask[i][j+leny] + or_mask[i+lenx][j+leny] == 0):
 				a = img[:, i:i+lenx, j:j+leny] - img[:, A2[0]:A2[1], A2[2]:A2[3]]
 				a = (a * area)**2
-				a = a.sum() + abs(x - (i + lenx // 2)) + abs(y - (j + leny // 2))
+				b = (img[:, i:i+lenx, j:j+leny] * mask[A2[0]:A2[1], A2[2]:A2[3]]) + (img[:, A2[0]:A2[1], A2[2]:A2[3]] * (1 - mask[A2[0]:A2[1], A2[2]:A2[3]]))
+				b = abs(b[:, 1:,:] - b[:, :-1,:]).sum() + abs(b[:,:,1:] - b[:,:,:-1]).sum()
+				a = a.sum() + b + abs(x - (i + lenx // 2)) + abs(y - (j + leny // 2))
 				if(a < minn):
 					minn = a
 					fx = i
@@ -160,7 +162,7 @@ def main_pic(filter_size):
 	kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(3, 3))
 	dilated = cv2.dilate(mask,kernel)      #膨胀图像
 	bound = dilated - mask
-	origin = cv2.imread("gt.png")
+	origin = cv2.imread("gt.jpg")
 	origin = origin.astype(np.float32)
 	if(mask.shape[0] != origin.shape[0] or mask.shape[1] != origin.shape[1]):
 		print("shape match missed")

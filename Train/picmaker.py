@@ -14,7 +14,7 @@ def load_pic():
 	global pic_data
 	global pic_file
 	mask_path = "mask.hdf5"
-	pic_path = "pic.hdf5"
+	pic_path = "pic0.hdf5"
 	
 	mask_file = tables.open_file(mask_path, mode='r')
 	mask_data = mask_file.root.data
@@ -39,7 +39,7 @@ def check_pic():
 def makepic():
 	print('Preparing for ground truth, mask and ground truth with mask...')	
 	output = np.zeros((1000, 256, 256, 9))
-	r = random.randint(0, 35)
+	r = random.randint(0, 28)
 	randommask = random.randint(0,5)
 	print("Using picture %d and mask %d" %(r, randommask))
 	'''
