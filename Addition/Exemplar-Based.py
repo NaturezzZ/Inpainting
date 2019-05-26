@@ -109,7 +109,14 @@ def change_grad(x, y, filter_size): #filter_size比原来更大，为奇数, 注
 def getpriority(x, y, filter_size):
 	A = get_patch(x, y, filter_size)
 	tmp = trust[A[0]:A[1], A[2]:A[3]].mean()
-	return tmp * (abs(scharr_bound_x[x][y] * scharry[x][y] - scharr_bound_y[x][y] * scharrx[x][y]) + 0.1) / 255. ##加上0.1是为了应对一些纯色图
+	A = get_patch(x, y, 5)
+	area = (1 - bound[A[0]:A[1], A[2]:A[3]]) * (1 - mask[A[0]:A[1], A[2]:A[3]]) #非bound且非mask
+	tmpx = 0
+	tmpy = 0
+	if (area.sum() != 0):
+		tmpx = (area * scharrx[A[0]:A[1], A[2]:A[3]]).sum() / area.sum()
+		tmpy = (area * scharry[A[0]:A[1], A[2]:A[3]]).sum() / area.sum()
+	return tmp * (abs(scharr_bound_x[x][y] * tmpy - scharr_bound_y[x][y] * tmpx) + 0.1) / 255. ##加上0.1是为了应对一些纯色图
 
 def add(x, y, filter_size):
 	A = get_patch(x, y, filter_size)
@@ -153,7 +160,7 @@ def main_pic(filter_size):
 	kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(3, 3))
 	dilated = cv2.dilate(mask,kernel)      #膨胀图像
 	bound = dilated - mask
-	origin = cv2.imread("gt.jpg")
+	origin = cv2.imread("gt.png")
 	origin = origin.astype(np.float32)
 	if(mask.shape[0] != origin.shape[0] or mask.shape[1] != origin.shape[1]):
 		print("shape match missed")
@@ -233,4 +240,4 @@ def main_pic(filter_size):
 	origin = origin.transpose(1, 2, 0)
 	cv2.imwrite("predict.png", origin)
 	
-main_pic(11)
+main_pic(9)
