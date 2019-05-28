@@ -357,19 +357,19 @@ from picmaker import load_pic
 from picmaker import makepic
 from picmaker import cl_file
 from picmaker import check_pic
-"""
+
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.0002), loss=None)
 load_pic()
-model.load_weights("Inpainting21.pkl")
-T =  25
-ep = 15
-for i in range(22, T):
+model.load_weights("lj_Inpainting27.pkl")
+T =  100
+ep = 8
+for i in range(28, T):
 	img = makepic()
 	print("****************%d remained*******************" % (T - i))
 	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0.1)
 	model.save_weights("Inpainting%d.pkl" % i)
 cl_file()
-"""
+
 '''
 import cv2
 test_img = check_pic()
@@ -379,7 +379,7 @@ pre = model.predict(test_img)
 
 '''
 
-
+"""
 '''再次训练'''
 load_pic()
 
@@ -392,14 +392,15 @@ for layer in model.layers:
 		layer.trainable = False
 
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.00005), loss=None)
-model.load_weights("lj_Inpainting19.pkl")
+model.load_weights("lj_Inpainting27.pkl")
 '''冻结encoder的BN权值'''
 
 T =  100
-ep = 26
-for i in range(20, T):
+ep = 8
+for i in range(28, T):
 	img = makepic()
 	print("****************%d remained*******************" % (T - i))
 	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0.1)
 	model.save_weights("lj_Inpainting%d.pkl" % i)
 cl_file()
+"""

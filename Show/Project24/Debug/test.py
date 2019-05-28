@@ -383,7 +383,7 @@ inputimg[0,:,:,6:9] = inputimg[0,:,:,:3] * inputimg[0,:,:,3:6]
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.0002), loss=None)
 present_path = os.getcwd()
 os.chdir("E:\\0NaturezzZ\\SchoolWork\\2019Spring\\AI_Intro\\CV_Smallclass\\Project\\Inpainting")
-model.load_weights("lj_Inpainting19.pkl")
+model.load_weights("Inpainting41.pkl")
 os.chdir(present_path)
 pre = model.predict(inputimg)
 outputimg = np.zeros((256, 256 * 3 + 12, 3))
@@ -391,4 +391,4 @@ outputimg[:,:256,:] = inputimg[0,:,:,6:9]
 outputimg[:,256 + 6: 256 + 6 + 256,:] = inputimg[0,:,:,:3]
 outputimg[:,512+12:,:] = pre[0]
 
-cv2.imwrite("final.png", outputimg)
+cv2.imwrite("final.jpg", outputimg)
