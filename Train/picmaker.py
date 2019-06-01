@@ -14,7 +14,7 @@ def load_pic():
 	global pic_data
 	global pic_file
 	mask_path = "mask.hdf5"
-	pic_path = "pic0.hdf5"
+	pic_path = "pic3.hdf5"
 	
 	mask_file = tables.open_file(mask_path, mode='r')
 	mask_data = mask_file.root.data

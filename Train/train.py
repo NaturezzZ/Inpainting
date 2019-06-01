@@ -360,10 +360,10 @@ from picmaker import check_pic
 
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.0002), loss=None)
 load_pic()
-model.load_weights("lj_Inpainting27.pkl")
-T =  100
+model.load_weights("Inpainting115.pkl")
+T =  200
 ep = 8
-for i in range(28, T):
+for i in range(116, T):
 	img = makepic()
 	print("****************%d remained*******************" % (T - i))
 	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0.1)
