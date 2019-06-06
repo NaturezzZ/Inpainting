@@ -353,21 +353,22 @@ predictions = LossLayer()([prediction, gt, mask0, pool0_pre, pool0_gt, pool0_com
 model = keras.Model(inputs=inputs, outputs=predictions)
 '''读入数据,gt split0, mask0 split1, x0_mask split2'''
 
-from picmaker import load_pic
-from picmaker import makepic
-from picmaker import cl_file
-from picmaker import check_pic
+from picmakershow import load_pic
+from picmakershow import makepic
+from picmakershow import cl_file
+from picmakershow import check_pic
 
 model.compile(optimizer=keras.optimizers.Adam(lr = 0.0002), loss=None)
 load_pic()
-model.load_weights("Inpainting115.pkl")
-T =  200
-ep = 8
-for i in range(116, T):
+model.load_weights("Inpainting380.pkl")
+T =  1000
+ep = 20
+for i in range(381, T):
 	img = makepic()
 	print("****************%d remained*******************" % (T - i))
-	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0.1)
-	model.save_weights("Inpainting%d.pkl" % i)
+	model.fit(img, epochs=ep, batch_size = 6, validation_split = 0)
+	if(i%20 == 0):
+		model.save_weights("Inpainting%d.pkl" % i)
 cl_file()
 
 '''
